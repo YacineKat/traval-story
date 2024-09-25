@@ -11,6 +11,7 @@ const jwt = require('jsonwebtoken');
 mongoose.connect(config.connectionString)
 
 const User = require('./models/user.model')
+const TravelStory = require('./models/travelStory.model')
 
 const app = express();
 app.use(express.json());
@@ -101,17 +102,30 @@ app.get('/get-user', authenticateToken, async (req,res) => {
     const isUser = await User.findOne({ _id: userId });
 
     if(!isUser){
-        return res.sendStatus(401)
+        return res.status(404).json({ message: "User not found" });
     }
     return res.json({
         user : isUser,
-        message: "",
+        message: "User retrieved successfully",
     })
-
 });
 
+
+// Add Travel Story
+app.post('/add-travel-story', authenticateToken, async (req, res) => {
+    const { title,  description, location, startDate, endDate, image } = req.body;
+    const { userId } = req.user;
+    
+    if(!title  || !story || !visitedLocation || !imagrUrl || !visitedDate ){
+        return res.status(400).json({
+            error: true,
+            message: "All fields are required"
+        })
+    }
+})
 
 app.listen(4000);
 module.exports = app 
 
 // 1:57 min
+// 1:04 min
