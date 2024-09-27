@@ -9,6 +9,7 @@ const fs = require('fs');
 const path = require('path');
 
 require('dotenv').config();
+mongoose.set('debug', true);
 const jwt = require('jsonwebtoken');
 
 mongoose.connect(config.connectionString)
@@ -228,14 +229,10 @@ app.get('/get-all-stories', authenticateToken, async  (req, res) => {
 
 
 // Edit Travel Story
-app.post('/edit-story/:id', authenticateToken, async (req, res) => {
+app.put('/edit-story/:id', authenticateToken, async (req, res) => {
     const { title, story,  visitedLocation, imageUrl, visitedDate } = req.body
     const { userId } = req.user;
     const { id } = req.params;  
-
-    console.log('User ID:', userId);
-    console.log('Story ID:', id);
-
 
     // Validate required fields
     if(!title  || !story || !visitedLocation || !imageUrl || !visitedDate ){
@@ -264,7 +261,7 @@ app.post('/edit-story/:id', authenticateToken, async (req, res) => {
         travelStory.visitedDate = parsedVisitedDate;
 
         await travelStory.save();
-        res.status(200).json({ message: "Travel Story updated successfully" })
+        res.status(200).json({  travelStory, message: "Travel Story updated successfully" })
 
     } catch (error) {
         res.status(500).json({
@@ -274,6 +271,70 @@ app.post('/edit-story/:id', authenticateToken, async (req, res) => {
     }
 })
 
+// Delet travel story
+app.delete('/delete-story/:id', authenticateToken, async (req, res) =>{
+    const { id } = req.params;
+    const { userId } = req.user;
+
+    try {
+         // Find the travel story by ID and ensure it belongs to the authenticated user
+         const travelStory = await TravelStory.findOne({ _id: id, userId: userId })        
+         if(!travelStory) {
+             return res.status(404).json({
+                 error: true,
+                 message: "Travel Story not found"
+             })
+         }
+         // Delet the travel story from the database
+         await travelStory.deleteOne({ _id: id,  userId: userId });
+
+         // Extract the filename from the imageUrl
+         const imageUrl = travelStory.imageUrl;
+         const filename = path.basename(imageUrl);
+
+         // Define the file path
+         const filePath = path.join(__dirname, 'uploads', filename);
+
+         // Delete the image file from the uploads folder
+         fs.unlink(filePath,  (err) => {
+            if (err) {
+                console.error('Filed to delete image file', err);
+    }})
+    res.status(200).json({ message: "Travel Story deleted successfully" })
+
+    } catch (error) {
+        res.status(500).json({
+            error: true,
+            message: error.message
+        })
+    }
+
+})
+
+// Update isFavourite
+app.put('/update-isFavourite/:id', authenticateToken, async (req, res) =>{
+    const  { id } = req.params;
+    const  { userId } = req.user;
+    const {isFavourite} = req.body;
+
+    try {
+        const travelStory = await TravelStory.findOne({ _id: id, userId: userId })
+        if(!travelStory) {
+            return  res.status(404).json({
+                error: true,
+                message: "Travel Story not found"
+            })
+        }
+        travelStory.isFavourite = isFavourite;
+        await travelStory.save();
+        res.status(200).json({ travelStory, message: "Travel Story updated successfully" })
+    } catch (error) {
+        res.status(500).json({
+            error: true,
+            message: error.message
+        })
+    }
+})
 
 app.listen(4000);
 module.exports = app 
@@ -282,3 +343,4 @@ module.exports = app
 // 1:57 min
 // 1:04 min     ~   44:57
 // 2:17 min     ~   1:08
+// 29:54 s      ~   1:18
