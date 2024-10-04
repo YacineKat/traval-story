@@ -19,11 +19,14 @@ const Login = () => {
           <form onSubmit={() => {}}>
             <h4 className="text-2xl font-semibold mb-7">Login</h4>
             <input type="text" placeholder='Email'  className="input-box" />
+
+            <input type="password" placeholder='Password' className="input-box mt-5" />
+
             <button type='submit' className="btn-primary">
               LOGIN
             </button>
-            <p className="">Or</p>
-            <button type='submit' className="" onClick={() => {
+            <p className="text-xs text-state-500 text-center my-4">Or</p>
+            <button type='submit' className="btn-primary btn-light" onClick={() => {
               navigate('/signUp')
             }} >
               CREATE ACCOUNT
